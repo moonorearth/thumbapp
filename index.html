@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Thumbnail Generator</title>
+    <!-- Sleek Inline SVG Favicon -->
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236366f1' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><rect x='3' y='3' width='18' height='18' rx='2' ry='2'/><circle cx='12' cy='12' r='3'/><path d='M3 9h2'/><path d='M3 15h2'/><path d='M19 9h2'/><path d='M19 15h2'/></svg>">
     <style>
         :root {
@@ -178,7 +179,7 @@
             cursor: pointer;
             transition: background-color 0.2s;
             height: 44px;
-            margin-top: 23px; /* Aligns with input field */
+            margin-top: 23px;
             white-space: nowrap;
         }
 
@@ -283,7 +284,7 @@
 
 <div class="container">
     <h1>Face Thumbnail Generator</h1>
-    <p class="subtitle">Upload an image to generate a centered 1024x1024 face crop.</p>
+    <p class="subtitle">Upload or paste (Ctrl+V) an image to generate a centered 1024x1024 face crop.</p>
 
     <div class="auth-section">
         <label for="secretKey">API Secret Key (Optional)</label>
@@ -291,7 +292,7 @@
     </div>
 
     <div class="drop-zone" id="dropZone">
-        <p id="dropText">Drag & drop your image here, or <span>Browse</span></p>
+        <p id="dropText">Drag & drop your image here, paste (Ctrl+V), or <span>Browse</span></p>
         <input type="file" id="fileInput" accept="image/*">
     </div>
 
@@ -370,6 +371,22 @@
     fileInput.addEventListener('change', (e) => {
         if (e.target.files.length > 0) {
             handleFileSelect(e.target.files[0]);
+        }
+    });
+
+    // Handle global Ctrl+V / Paste event
+    window.addEventListener('paste', (e) => {
+        const items = e.clipboardData.items;
+        for (let i = 0; i < items.length; i++) {
+            if (items[i].type.indexOf('image') !== -1) {
+                const blob = items[i].getAsFile();
+                if (blob) {
+                    // Create a simulated file with default name for pasted content
+                    const pastedFile = new File([blob], "pasted_image.png", { type: blob.type });
+                    handleFileSelect(pastedFile);
+                    break;
+                }
+            }
         }
     });
 
