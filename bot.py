@@ -101,7 +101,7 @@ async def thumb(interaction: discord.Interaction, image: discord.Attachment):
                 
                 # Use the dynamic base filename with .png extension in Discord
                 discord_file = discord.File(fp=io.BytesIO(result_bytes), filename=output_filename)
-                await interaction.followup.send(content=f"✨ **Here is your high-end face thumbnail (`{output_filename}`):**", file=discord_file)
+                await interaction.followup.send(content=f"Thumbnail for `{output_filename}`", file=discord_file)
 
     except Exception as e:
         await interaction.followup.send(f"❌ An unexpected error occurred: `{str(e)}`")
