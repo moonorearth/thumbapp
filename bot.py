@@ -3,6 +3,7 @@ import io
 import discord
 from discord import app_commands
 from fastapi import FastAPI, File, UploadFile, Header, HTTPException, Response
+from fastapi.responses import FileResponse
 import uvicorn
 from threading import Thread
 import aiohttp
@@ -10,7 +11,7 @@ import aiohttp
 # Import our advanced image processor
 from thumb_processor import process_image_bytes
 
-# --- 1. FASTAPI IMAGE PROCESSING API ---
+# --- 1. FASTAPI IMAGE PROCESSING API & WEB UI ---
 app = FastAPI()
 
 API_SECRET_KEY = os.environ.get("API_SECRET_KEY", "your-secret-key")
@@ -22,9 +23,10 @@ def verify_token(authorization: str = Header(None)):
     if token != API_SECRET_KEY:
         raise HTTPException(status_code=401, detail="Unauthorized")
 
-@app.get("/")
-def health_check():
-    return {"status": "Render Bot & Advanced API are alive!"}
+@app.get("/", response_class=FileResponse)
+def serve_ui():
+    """Serves the web user interface index.html at root url"""
+    return FileResponse("index.html")
 
 @app.post("/api/thumb")
 async def generate_thumbnail(file: UploadFile = File(...), authorization: str = Header(None)):
