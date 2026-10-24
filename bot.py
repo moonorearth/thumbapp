@@ -76,7 +76,7 @@ async def thumb(interaction: discord.Interaction, image: discord.Attachment):
     await interaction.response.defer(thinking=True)
 
     try:
-        # Extract base filename dynamically from the uploaded Discord attachment
+        # Preserve exact spacing and characters from the original upload filename
         last_dot = image.filename.rfind('.')
         base_name = image.filename[:last_dot] if last_dot != -1 else image.filename
         output_filename = f"{base_name}.png"
@@ -99,7 +99,6 @@ async def thumb(interaction: discord.Interaction, image: discord.Attachment):
 
                 result_bytes = await response.read()
                 
-                # Use the dynamic base filename with .png extension in Discord
                 discord_file = discord.File(fp=io.BytesIO(result_bytes), filename=output_filename)
                 await interaction.followup.send(content=f"Thumbnail for `{output_filename}`", file=discord_file)
 
