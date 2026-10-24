@@ -76,9 +76,10 @@ async def thumb(interaction: discord.Interaction, image: discord.Attachment):
     await interaction.response.defer(thinking=True)
 
     try:
-        # Preserve exact spacing and characters from the original upload filename
+        # Extract base filename and convert Discord's forced underscores back to spaces
         last_dot = image.filename.rfind('.')
         base_name = image.filename[:last_dot] if last_dot != -1 else image.filename
+        base_name = base_name.replace('_', ' ')  # Replaces underscores with spaces (e.g., tom_holland -> tom holland)
         output_filename = f"{base_name}.png"
 
         image_bytes = await image.read()
