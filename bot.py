@@ -76,6 +76,11 @@ async def thumb(interaction: discord.Interaction, image: discord.Attachment):
     await interaction.response.defer(thinking=True)
 
     try:
+        # Extract base filename dynamically from the uploaded Discord attachment
+        last_dot = image.filename.rfind('.')
+        base_name = image.filename[:last_dot] if last_dot != -1 else image.filename
+        output_filename = f"{base_name}.png"
+
         image_bytes = await image.read()
         port = int(os.environ.get("PORT", 8080))
         local_api_url = f"http://127.0.0.1:{port}/api/thumb"
@@ -93,8 +98,10 @@ async def thumb(interaction: discord.Interaction, image: discord.Attachment):
                     return
 
                 result_bytes = await response.read()
-                discord_file = discord.File(fp=io.BytesIO(result_bytes), filename="thumb_1024.png")
-                await interaction.followup.send(content="✨ **Here is your high-end face thumbnail:**", file=discord_file)
+                
+                # Use the dynamic base filename with .png extension in Discord
+                discord_file = discord.File(fp=io.BytesIO(result_bytes), filename=output_filename)
+                await interaction.followup.send(content=f"✨ **Here is your high-end face thumbnail (`{output_filename}`):**", file=discord_file)
 
     except Exception as e:
         await interaction.followup.send(f"❌ An unexpected error occurred: `{str(e)}`")
