@@ -375,12 +375,11 @@
         }
     });
 
-    // Handle global Ctrl+V / Paste event (supports files copied from File Explorer & image blobs)
+    // Handle global Ctrl+V / Paste event
     window.addEventListener('paste', (e) => {
         const clipboardData = e.clipboardData;
         if (!clipboardData) return;
 
-        // 1. Check if files were copied directly from File Explorer (e.g. tom holland.jpg)
         if (clipboardData.files && clipboardData.files.length > 0) {
             const file = clipboardData.files[0];
             if (file.type.startsWith('image/')) {
@@ -390,7 +389,6 @@
             }
         }
 
-        // 2. Check clipboard items for raw image blobs/screenshots
         const items = clipboardData.items;
         if (items) {
             for (let i = 0; i < items.length; i++) {
@@ -428,10 +426,16 @@
         filenameInput.value = baseName;
         updateFilenameUI();
 
-        // Show original image preview immediately
+        // Show original image preview immediately and make the container visible
         const reader = new FileReader();
         reader.onload = (e) => {
             origPreview.src = e.target.result;
+            // Reveal the preview container grid so the original image shows immediately
+            previewContainer.style.display = 'grid';
+            // Hide the result card until 'RUN' is clicked, or keep it visible if preferred. 
+            // Actually, let's keep original visible and result hidden until run:
+            resultPreview.src = "";
+            document.querySelectorAll('.preview-card')[1].style.display = 'none'; // hide result card temporarily until run
         };
         reader.readAsDataURL(file);
     }
@@ -441,7 +445,6 @@
 
         const secretKey = secretKeyInput.value.trim() || 'your-secret-key';
         
-        // Create a custom named File object using the user's input value so the backend receives the correct name
         const currentBaseName = filenameInput.value.trim() || 'filename';
         const finalFileToUpload = new File([selectedFile], `${currentBaseName}.png`, { type: selectedFile.type });
 
@@ -452,7 +455,6 @@
         runBtn.disabled = true;
         spinner.style.display = 'block';
         hideError();
-        previewContainer.style.display = 'none';
 
         try {
             const response = await fetch('/api/thumb', {
@@ -475,6 +477,8 @@
             const blob = await response.blob();
             const imageUrl = URL.createObjectURL(blob);
 
+            // Make sure result card is visible again
+            document.querySelectorAll('.preview-card')[1].style.display = 'block';
             resultPreview.src = imageUrl;
             downloadBtn.href = imageUrl;
 
