@@ -292,7 +292,6 @@
         <input type="text" id="secretKey" value="your-secret-key" placeholder="your-secret-key">
     </div>
 
-    <!-- Added tabindex so the drop-zone can capture keyboard paste events directly -->
     <div class="drop-zone" id="dropZone" tabindex="0">
         <p id="dropText">Drag & drop your image here, paste (Ctrl+V), or <span>Browse</span></p>
         <input type="file" id="fileInput" accept="image/*">
@@ -376,18 +375,33 @@
         }
     });
 
-    // Handle global Ctrl+V / Paste event anywhere on the page
+    // Handle global Ctrl+V / Paste event (supports files copied from File Explorer & image blobs)
     window.addEventListener('paste', (e) => {
-        const items = e.clipboardData?.items;
-        if (!items) return;
+        const clipboardData = e.clipboardData;
+        if (!clipboardData) return;
 
-        for (let i = 0; i < items.length; i++) {
-            if (items[i].type.indexOf('image') !== -1) {
-                const blob = items[i].getAsFile();
-                if (blob) {
-                    const pastedFile = new File([blob], "pasted_image.png", { type: blob.type });
-                    handleFileSelect(pastedFile);
-                    break;
+        // 1. Check if files were copied directly from File Explorer (e.g. tom holland.jpg)
+        if (clipboardData.files && clipboardData.files.length > 0) {
+            const file = clipboardData.files[0];
+            if (file.type.startsWith('image/')) {
+                handleFileSelect(file);
+                e.preventDefault();
+                return;
+            }
+        }
+
+        // 2. Check clipboard items for raw image blobs/screenshots
+        const items = clipboardData.items;
+        if (items) {
+            for (let i = 0; i < items.length; i++) {
+                if (items[i].type.indexOf('image') !== -1) {
+                    const blob = items[i].getAsFile();
+                    if (blob) {
+                        const pastedFile = new File([blob], "pasted_image.png", { type: blob.type });
+                        handleFileSelect(pastedFile);
+                        e.preventDefault();
+                        break;
+                    }
                 }
             }
         }
@@ -403,11 +417,10 @@
         runBtn.disabled = false;
         hideError();
 
-        // Extract filename without extension and put it in input field
+        // Extract basename without extension and populate input field
         const lastDot = file.name.lastIndexOf('.');
         let baseName = lastDot !== -1 ? file.name.substring(0, lastDot) : file.name;
         
-        // If pasted image comes as generic name, default it cleanly to 'pasted_image'
         if (baseName === "image" || baseName === "pasted_image") {
             baseName = "pasted_image";
         }
@@ -415,7 +428,7 @@
         filenameInput.value = baseName;
         updateFilenameUI();
 
-        // Show original image preview immediately using FileReader
+        // Show original image preview immediately
         const reader = new FileReader();
         reader.onload = (e) => {
             origPreview.src = e.target.result;
@@ -427,8 +440,13 @@
         if (!selectedFile) return;
 
         const secretKey = secretKeyInput.value.trim() || 'your-secret-key';
+        
+        // Create a custom named File object using the user's input value so the backend receives the correct name
+        const currentBaseName = filenameInput.value.trim() || 'filename';
+        const finalFileToUpload = new File([selectedFile], `${currentBaseName}.png`, { type: selectedFile.type });
+
         const formData = new FormData();
-        formData.append('file', selectedFile);
+        formData.append('file', finalFileToUpload);
 
         // UI updates
         runBtn.disabled = true;
