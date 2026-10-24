@@ -298,10 +298,10 @@
         <div class="filename-group">
             <label for="filenameInput">Output Filename</label>
             <div class="filename-input-container">
-                <input type="text" id="filenameInput" placeholder="thumb_34sdfK">
+                <input type="text" id="filenameInput" placeholder="filename">
                 <span class="filename-ext">.png</span>
             </div>
-            <span class="filename-preview-text" id="filenamePreviewText">Final: thumb_34sdfK.png</span>
+            <span class="filename-preview-text" id="filenamePreviewText">Final: filename.png</span>
         </div>
         <button class="btn-run" id="runBtn" disabled>RUN</button>
     </div>
@@ -317,7 +317,7 @@
         <div class="preview-card">
             <h3>1024x1024 Result</h3>
             <img id="resultPreview" src="" alt="Thumbnail Result">
-            <a id="downloadBtn" class="btn-download" download="thumb_34sdfK.png">Download</a>
+            <a id="downloadBtn" class="btn-download" download="filename.png">Download</a>
         </div>
     </div>
 </div>
@@ -339,29 +339,13 @@
 
     let selectedFile = null;
 
-    // Helper: Generate 6-character random alphanumeric string
-    function generateGibberish(length = 6) {
-        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-        let result = '';
-        for (let i = 0; i < length; i++) {
-            result += chars.charAt(Math.floor(Math.random() * chars.length));
-        }
-        return result;
-    }
-
     function updateFilenameUI() {
         const rawName = filenameInput.value.trim();
-        const placeholderName = filenameInput.placeholder;
-        const baseName = rawName !== '' ? rawName : placeholderName;
+        const baseName = rawName !== '' ? rawName : 'filename';
         
         filenamePreviewText.textContent = `Final: ${baseName}.png`;
         downloadBtn.download = `${baseName}.png`;
     }
-
-    // Set initial 6-char gibberish placeholder
-    const defaultGibberish = `thumb_${generateGibberish()}`;
-    filenameInput.placeholder = defaultGibberish;
-    updateFilenameUI();
 
     filenameInput.addEventListener('input', updateFilenameUI);
 
@@ -398,11 +382,11 @@
         runBtn.disabled = false;
         hideError();
 
-        // Refresh gibberish placeholder for new upload if field is empty
-        if (!filenameInput.value.trim()) {
-            filenameInput.placeholder = `thumb_${generateGibberish()}`;
-            updateFilenameUI();
-        }
+        // Extract filename without extension and put it in input field
+        const lastDot = file.name.lastIndexOf('.');
+        const baseName = lastDot !== -1 ? file.name.substring(0, lastDot) : file.name;
+        filenameInput.value = baseName;
+        updateFilenameUI();
 
         // Show original image preview
         const reader = new FileReader();
